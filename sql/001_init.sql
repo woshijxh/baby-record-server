@@ -1,0 +1,104 @@
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  open_id VARCHAR(128) NOT NULL UNIQUE,
+  nickname VARCHAR(64) NOT NULL DEFAULT '',
+  avatar_url VARCHAR(255) NOT NULL DEFAULT '',
+  status TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS families (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(64) NOT NULL,
+  owner_user_id BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_families_owner_user_id (owner_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS family_members (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  family_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  role VARCHAR(16) NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'active',
+  joined_at DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY idx_family_members_family_user (family_id, user_id),
+  KEY idx_family_members_user_id (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS family_invites (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  family_id BIGINT UNSIGNED NOT NULL,
+  code VARCHAR(6) NOT NULL UNIQUE,
+  expires_at DATETIME NOT NULL,
+  used_by BIGINT UNSIGNED NULL,
+  used_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_family_invites_family_id (family_id),
+  KEY idx_family_invites_expires_at (expires_at)
+);
+
+CREATE TABLE IF NOT EXISTS family_join_requests (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  family_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  invite_code VARCHAR(6) NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'pending',
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_family_join_requests_family_id (family_id),
+  KEY idx_family_join_requests_user_id (user_id),
+  KEY idx_family_join_requests_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS babies (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  family_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(64) NOT NULL,
+  gender VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  birthday DATE NOT NULL,
+  avatar_url VARCHAR(255) NOT NULL DEFAULT '',
+  feeding_mode VARCHAR(32) NOT NULL DEFAULT '',
+  allergy_note VARCHAR(255) NOT NULL DEFAULT '',
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_babies_family_id (family_id),
+  KEY idx_babies_is_active (is_active)
+);
+
+CREATE TABLE IF NOT EXISTS records (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  family_id BIGINT UNSIGNED NOT NULL,
+  baby_id BIGINT UNSIGNED NOT NULL,
+  type VARCHAR(16) NOT NULL,
+  subtype VARCHAR(32) NOT NULL DEFAULT '',
+  occurred_at DATETIME NOT NULL,
+  start_at DATETIME NULL,
+  end_at DATETIME NULL,
+  amount DECIMAL(10,2) NULL,
+  unit VARCHAR(16) NOT NULL DEFAULT '',
+  duration_min INT NULL,
+  weight_kg DECIMAL(6,2) NULL,
+  height_cm DECIMAL(6,2) NULL,
+  head_circumference_cm DECIMAL(6,2) NULL,
+  note VARCHAR(255) NOT NULL DEFAULT '',
+  created_by BIGINT UNSIGNED NOT NULL,
+  updated_by BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL,
+  KEY idx_records_family_baby (family_id, baby_id),
+  KEY idx_records_type (type),
+  KEY idx_records_occurred_at (occurred_at),
+  KEY idx_records_deleted_at (deleted_at)
+);
